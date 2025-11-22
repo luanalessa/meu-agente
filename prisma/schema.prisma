@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Paciente {
+  id              Int       @id @default(autoincrement())
+  nome            String
+  dataNascimento  DateTime
+  telefoneWhatsapp String   @unique
+  bairro          String?
+  cidade          String?
+  estado          String?
+  criadoEm        DateTime  @default(now())
+
+  consultas       Consulta[]
+  receitas        ReceitaMedica[]
+  logsWhatsApp    LogInteracaoWhatsApp[]
+}
+
+model Consulta {
+  id               Int       @id @default(autoincrement())
+  pacienteId       Int
+  tipoConsulta     String
+  origemSolicitacao String   // "whatsapp", "presencial", etc.
+  status           String    // "solicitada", "agendada", "atendida", "cancelada", "falta"
+  prioridade       String?   // "normal", "prioridade", "urgencia"
+  dataSolicitacao  DateTime  @default(now())
+  dataAgendada     DateTime?
+  dataAtendimento  DateTime?
+
+  paciente         Paciente  @relation(fields: [pacienteId], references: [id])
+}
+
+model ReceitaMedica {
+  id                 Int      @id @default(autoincrement())
+  pacienteId         Int
+  consultaId         Int?
+  dataEnvio          DateTime @default(now())
+  urlImagem          String
+  textoExtraido      String?
+  status             String   // "pendente", "validada", "duvida", "recusada"
+
+  paciente           Paciente @relation(fields: [pacienteId], references: [id])
+}
+
+model LogInteracaoWhatsApp {
+  id          Int      @id @default(autoincrement())
+  pacienteId  Int?
+  telefone    String
+  tipoMensagem String  // "texto", "audio", "imagem"
+  intent      String?  // "agendar_consulta", "enviar_receita", etc.
+  sucesso     Boolean  @default(false)
+  criadoEm    DateTime @default(now())
+
+  paciente    Paciente? @relation(fields: [pacienteId], references: [id])
+}
