@@ -1,0 +1,374 @@
+openapi: 3.0.3
+info:
+  title: API - Agente Comunitário de Saúde
+  version: 1.0.0
+  description: Documentação da API usada pelo sistema de gestão inteligente para agentes comunitários de saúde.
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+
+  ##############################################
+  # CONSULTAS
+  ##############################################
+
+  
+  /api/consultas:
+    post:
+      summary: Criar consulta manualmente
+      tags: [Consultas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pacienteId, tipoConsulta]
+              properties:
+                pacienteId:
+                  type: integer
+                tipoConsulta:
+                  type: string
+                origemSolicitacao:
+                  type: string
+                status:
+                  type: string
+                prioridade:
+                  type: string
+                dataAgendada:
+                  type: string
+                  format: date-time
+                dataAtendimento:
+                  type: string
+                  format: date-time
+      responses:
+        "201":
+          description: Consulta criada
+
+    get:
+      summary: Listar consultas
+      tags: [Consultas]
+      parameters:
+        - in: query
+          name: pacienteId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de consultas
+
+  /api/consultas/{id}:
+    get:
+      summary: Buscar consulta por ID
+      tags: [Consultas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Consulta encontrada
+
+    patch:
+      summary: Atualizar consulta
+      tags: [Consultas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                prioridade:
+                  type: string
+                dataAgendada:
+                  type: string
+                  format: date-time
+                dataAtendimento:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Consulta atualizada
+
+  /api/consultas/foto:
+    post:
+      summary: Extrair dados da consulta a partir de uma imagem
+      tags: [Consultas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageUrl]
+              properties:
+                pacienteId:
+                  type: integer
+                imageUrl:
+                  type: string
+      responses:
+        "200":
+          description: Dados extraídos da imagem
+
+  /api/consultas/voz:
+    post:
+      summary: Extrair dados da consulta a partir de texto/voz transcrita
+      tags: [Consultas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [texto]
+              properties:
+                pacienteId:
+                  type: integer
+                texto:
+                  type: string
+      responses:
+        "200":
+          description: Dados extraídos do texto
+
+
+  ##############################################
+  # RECEITAS
+  ##############################################
+
+  /api/receitas:
+    post:
+      summary: Criar receita manualmente
+      tags: [Receitas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pacienteId]
+              properties:
+                pacienteId:
+                  type: integer
+                consultaId:
+                  type: integer
+                urlImagem:
+                  type: string
+                textoExtraido:
+                  type: string
+                status:
+                  type: string
+      responses:
+        "201":
+          description: Receita criada
+
+    get:
+      summary: Listar receitas
+      tags: [Receitas]
+      parameters:
+        - in: query
+          name: pacienteId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de receitas
+
+  /api/receitas/{id}:
+    patch:
+      summary: Atualizar receita
+      tags: [Receitas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                textoExtraido:
+                  type: string
+      responses:
+        "200":
+          description: Receita atualizada
+
+  /api/receitas/foto:
+    post:
+      summary: Ler e estruturar receita médica a partir de imagem
+      tags: [Receitas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageUrl]
+              properties:
+                pacienteId:
+                  type: integer
+                consultaId:
+                  type: integer
+                imageUrl:
+                  type: string
+      responses:
+        "200":
+          description: Receita processada com sucesso
+
+
+  ##############################################
+  # FILA SUS
+  ##############################################
+
+  /api/fila/entrada:
+    post:
+      summary: Inserir paciente na fila
+      tags: [Fila SUS]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pacienteId, tipoServico]
+              properties:
+                pacienteId:
+                  type: integer
+                tipoServico:
+                  type: string
+                especialidade:
+                  type: string
+                prioridade:
+                  type: string
+      responses:
+        "201":
+          description: Paciente inserido na fila
+
+  /api/fila/{id}:
+    get:
+      summary: Consultar status de uma entrada da fila
+      tags: [Fila SUS]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Status retornado
+
+  /api/fila/{id}/saida:
+    patch:
+      summary: Registrar saída da fila (atendido, desistiu, encaminhado)
+      tags: [Fila SUS]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivoSaida]
+              properties:
+                motivoSaida:
+                  type: string
+                  enum: [atendido, desistiu, encaminhado]
+      responses:
+        "200":
+          description: Saída registrada
+
+  /api/fila/resumo:
+    get:
+      summary: Resumo geral da fila SUS por especialidade
+      tags: [Fila SUS]
+      responses:
+        "200":
+          description: Resumo da fila
+
+  /api/fila/pacientes:
+    get:
+      summary: Ver pacientes na fila, ordenados por prioridade
+      tags: [Fila SUS]
+      responses:
+        "200":
+          description: Lista de pacientes na fila
+  
+  /api/pacientes:
+    post:
+      summary: Cadastrar paciente
+      tags: [Pacientes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, dataNascimento, telefoneWhatsapp]
+              properties:
+                nome:
+                  type: string
+                  example: "Dona Maria da Silva"
+                dataNascimento:
+                  type: string
+                  format: date
+                  example: "1954-10-02"
+                telefoneWhatsapp:
+                  type: string
+                  example: "5588991400000"
+                bairro:
+                  type: string
+                  example: "Setor Central"
+                cidade:
+                  type: string
+                  example: "Goiânia"
+                estado:
+                  type: string
+                  example: "GO"
+      responses:
+        "201":
+          description: Paciente cadastrado
+
+  /api/pacientes/{id}/status:
+    get:
+      summary: Ver status consolidado do paciente
+      tags: [Pacientes]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Status do paciente
+        "404":
+          description: Paciente não encontrado
+
+tags:
+  - name: Pacientes
+  - name: Consultas
+  - name: Receitas
+  - name: Fila SUS
